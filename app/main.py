@@ -19,6 +19,15 @@ app = FastAPI(title="User Service", version="1.0.0")
 async def startup_event():
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+    # Start Kafka consumer for user events
+    from app.kafka.consumer import event_consumer
+    import asyncio
+    asyncio.create_task(event_consumer.start())
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    from app.kafka.consumer import event_consumer
+    await event_consumer.stop()
 
 @app.get("/users/profile/{user_id}", response_model=User)
 async def get_user_profile(user_id: int, db: AsyncSession = Depends(get_db)):
