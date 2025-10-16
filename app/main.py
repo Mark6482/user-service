@@ -77,5 +77,10 @@ async def create_new_user(user: UserCreate, db: AsyncSession = Depends(get_db)):
         raise HTTPException(status_code=400, detail="Email already registered")
     return await create_user(db, user)
 
+@app.get("/health")
+async def health_check():
+    """Проверка здоровья сервиса"""
+    return {"status": "healthy", "service": "user-service"}
+
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000, reload=True)
