@@ -65,6 +65,20 @@ async def get_addresses(user_id: int, db: AsyncSession = Depends(get_db)):
 
 @app.post("/users/{user_id}/addresses", response_model=Address)
 async def create_address(user_id: int, address: AddressCreate, db: AsyncSession = Depends(get_db)):
+    # Pre-check for exact duplicate to return proper status code
+    existing_list = await get_user_addresses(db, user_id)
+    for existing in existing_list:
+        if (
+            existing.address_line == address.address_line and
+            existing.city == address.city and
+            existing.state == address.state and
+            existing.postal_code == address.postal_code and
+            existing.country == address.country
+        ):
+            # still apply primary toggle if requested
+            await create_user_address(db, user_id, address)
+            raise HTTPException(status_code=409, detail="Address already exists for this user")
+
     db_address = await create_user_address(db, user_id, address)
     if db_address is None:
         raise HTTPException(status_code=404, detail="User not found")

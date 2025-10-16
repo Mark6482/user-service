@@ -65,6 +65,27 @@ async def create_user_address(db: AsyncSession, user_id: int, address: AddressCr
         return None
     
     existing_addresses = await get_user_addresses(db, user_id)
+
+    # 1) Check for exact duplicate address for this user; if exists, don't add new
+    for existing in existing_addresses:
+        if (
+            existing.address_line == address.address_line and
+            existing.city == address.city and
+            existing.state == address.state and
+            existing.postal_code == address.postal_code and
+            existing.country == address.country
+        ):
+            # If caller wants it primary, flip primary flags accordingly
+            if address.is_primary and not existing.is_primary:
+                for addr in existing_addresses:
+                    if addr.is_primary:
+                        addr.is_primary = False
+                existing.is_primary = True
+                await db.commit()
+                await db.refresh(existing)
+            return existing
+
+    # 2) No duplicate -> proceed with creation
     is_primary = not existing_addresses or address.is_primary
     
     if is_primary and existing_addresses:
