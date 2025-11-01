@@ -1,25 +1,7 @@
 from pydantic import BaseModel, EmailStr
 from datetime import datetime
 from typing import List, Optional, Dict
-
-class AddressBase(BaseModel):
-    address_line: str
-    city: str
-    state: str
-    postal_code: str
-    country: str = "Russia"
-    is_primary: bool = False
-
-class AddressCreate(AddressBase):
-    pass
-
-class Address(AddressBase):
-    id: int
-    user_id: int
-    created_at: datetime
-
-    class Config:
-        from_attributes = True
+from src.schemas.address import Address
 
 class UserBase(BaseModel):
     email: EmailStr
@@ -52,3 +34,4 @@ class User(UserBase):
 class Courier(User):
     rating: Optional[float] = None
     delivery_stats: Optional[Dict] = None
+    

@@ -2,10 +2,9 @@ import asyncio
 import json
 import logging
 from aiokafka import AIOKafkaConsumer
-from sqlalchemy.ext.asyncio import AsyncSession
-from app.database import AsyncSessionLocal
-from app.crud import get_user_by_email, create_user, update_user
-from app.schemas import UserCreate, UserUpdate
+from src.db.session import AsyncSessionLocal
+from src.services.user import get_user_by_email, create_user, update_user
+from src.schemas.user import UserCreate, UserUpdate
 
 logger = logging.getLogger(__name__)
 
