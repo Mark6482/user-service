@@ -4,11 +4,11 @@ from typing import List
 
 from src.api.deps import get_db
 from src.schemas.user import User, UserCreate, UserUpdate, Courier
-from src.schemas.address import Address, AddressCreate
+from src.schemas.address import Address, AddressCreate, AddressUpdate
 from src.services.user import (
-    get_user, create_user, update_user, delete_user, get_user_by_email, get_courier
+    get_user, create_user, update_user, delete_user, get_user_by_email, get_courier, get_user_addresses
 )
-from src.services.address import get_user_addresses, create_user_address
+from src.services.address import create_user_address, update_user_address, delete_user_address, get_address
 
 router = APIRouter()
 
@@ -64,6 +64,35 @@ async def create_address(user_id: int, address: AddressCreate, db: AsyncSession 
     if db_address is None:
         raise HTTPException(status_code=404, detail="User not found")
     return db_address
+
+@router.put("/{user_id}/addresses/{address_id}", response_model=Address)
+async def update_address(
+    user_id: int, 
+    address_id: int, 
+    address_update: AddressUpdate, 
+    db: AsyncSession = Depends(get_db)
+):
+    # Check if user exists
+    if not await get_user(db, user_id):
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    db_address = await update_user_address(db, user_id, address_id, address_update)
+    if db_address is None:
+        raise HTTPException(status_code=404, detail="Address not found")
+    
+    return db_address
+
+@router.delete("/{user_id}/addresses/{address_id}")
+async def delete_address(user_id: int, address_id: int, db: AsyncSession = Depends(get_db)):
+    # Check if user exists
+    if not await get_user(db, user_id):
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    db_address = await delete_user_address(db, user_id, address_id)
+    if db_address is None:
+        raise HTTPException(status_code=404, detail="Address not found")
+    
+    return {"message": "Address deleted successfully"}
 
 @router.post("/", response_model=User)
 async def create_new_user(user: UserCreate, db: AsyncSession = Depends(get_db)):
